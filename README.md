@@ -30,7 +30,15 @@ with npz files with a mask indicating what residues are designed.
 
 ```
 DESIGN_DIR=test/data/design_dir_cif_npz/oqo-1
-OUT_DIR=results/experiment1
+# or:
+# DESIGN_DIR=test/data/design_dir_cif_npz/glp1
+OUT_DIR=results/$(basename $DESIGN_DIR)
+mkdir -p $OUT_DIR
+python scripts/ingest_from_design_dir.py $DESIGN_DIR $OUT_DIR/designs.yaml
+```
+
+```
+OUT_DIR=results/$(basename $DESIGN_DIR)
 mkdir -p $OUT_DIR
 python scripts/ingest_from_design_dir.py $DESIGN_DIR $OUT_DIR/designs.yaml
 ```

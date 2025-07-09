@@ -137,17 +137,24 @@ def process_design_files(design_dir: Path) -> List[Dict]:
     
     # Group CIF and NPZ files by their base names
     file_groups: Dict[str, Dict[str, Path]] = {}
-    for file_path in design_dir.glob("batch0_sample*"):
-        # Remove extension before calculating base name
-        name_without_ext = file_path.stem
-        base_name = "_".join(name_without_ext.split("_")[:3])  # batch0_sample0_rank0
+    
+    # Find all .cif files
+    for cif_file in design_dir.glob("*.cif"):
+        # Remove "_gen" from the filename and get base name
+        name = cif_file.stem  # filename without extension
+        base_name = name.replace("_gen", "")
         if base_name not in file_groups:
             file_groups[base_name] = {}
-        if file_path.suffix == '.cif':
-            file_groups[base_name]['cif'] = file_path
-        elif file_path.suffix == '.npz':
-            if file_path.name.endswith('_metadata.npz'):
-                file_groups[base_name]['npz'] = file_path
+        file_groups[base_name]['cif'] = cif_file
+    
+    # Find all .npz files
+    for npz_file in design_dir.glob("*.npz"):
+        # Remove "_metadata" from the filename and get base name
+        name = npz_file.stem  # filename without extension
+        base_name = name.replace("_metadata", "")
+        if base_name not in file_groups:
+            file_groups[base_name] = {}
+        file_groups[base_name]['npz'] = npz_file
 
     # Process each group of files
     for base_name, files in file_groups.items():
