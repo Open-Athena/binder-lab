@@ -5,6 +5,8 @@ resources/*/*.pkl
 resources/*/*.tar
 resources/boltz/mols
 
+.snakemake
+
 .vscode
 .triton
 
