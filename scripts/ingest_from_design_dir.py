@@ -139,7 +139,9 @@ def process_design_files(design_dir: Path) -> List[Dict]:
     # Group CIF and NPZ files by their base names
     file_groups: Dict[str, Dict[str, Path]] = {}
     for file_path in design_dir.glob("batch0_sample*"):
-        base_name = "_".join(file_path.name.split("_")[:3])  # batch0_sample0_rank0
+        # Remove extension before calculating base name
+        name_without_ext = file_path.stem
+        base_name = "_".join(name_without_ext.split("_")[:3])  # batch0_sample0_rank0
         if base_name not in file_groups:
             file_groups[base_name] = {}
         if file_path.suffix == '.cif':

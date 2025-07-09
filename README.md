@@ -24,7 +24,7 @@ script that will generate a yaml from a directory containing cif files for desig
 with npz files with a mask indicating what residues are designed.
 
 ```
-DESIGN_DIR=/path/to/your/designs
+DESIGN_DIR=test/data/design_dir_cif_npz/oqo-1
 OUT_DIR=results/experiment1
 mkdir -p $OUT_DIR
 python scripts/ingest_from_design_dir.py $DESIGN_DIR $OUT_DIR/designs.yaml
