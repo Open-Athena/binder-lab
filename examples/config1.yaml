@@ -1,0 +1,11 @@
+version: 1
+
+structure_predictors:
+  - name: alphafold3
+    tool: alphafold3
+    recycles: 3
+  - name: boltz2
+    tool: boltz
+    version: 2
+    recycles: 3
+

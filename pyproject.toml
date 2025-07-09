@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "binder_lab"
+version = "0.1.0"
+authors = [
+    { name = "Tim O'Donnell", email = "timodonnell@gmail.com" },
+]
+description = "Analyze protein designs"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "gemmi",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Open-Athena/binder-lab" 
