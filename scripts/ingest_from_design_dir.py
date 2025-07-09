@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import hashlib
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Union
 import yaml  # type: ignore
@@ -131,7 +132,23 @@ def split_design_mask(structure: gemmi.Structure, design_mask: np.ndarray) -> Di
     
     return chain_masks
 
-def process_design_files(design_dir: Path) -> List[Dict]:
+def generate_design_hash(cif_path: Path, npz_path: Path) -> str:
+    """
+    Generate a unique SHA1 hash based on the contents of the CIF and NPZ files.
+    """
+    sha1 = hashlib.sha1()
+    
+    # Hash CIF file content
+    with open(cif_path, 'rb') as f:
+        sha1.update(f.read())
+    
+    # Hash NPZ file content
+    with open(npz_path, 'rb') as f:
+        sha1.update(f.read())
+    
+    return sha1.hexdigest()
+
+def process_design_files(design_dir: Path, use_unique_ids: bool = False) -> List[Dict]:
     """Process all CIF and NPZ files in the design directory."""
     designs: List[Dict] = []
     
@@ -188,11 +205,24 @@ def process_design_files(design_dir: Path) -> List[Dict]:
                 chain_info = get_chain_info(structure, chain_id, chain_masks[chain_id])
                 sequences.append(chain_info)
             
-            # Create design entry
-            design = {
-                'name': base_name,
-                'sequences': sequences
-            }
+            # Create design entry with source directory metadata
+            if use_unique_ids:
+                design = {
+                    'name': generate_design_hash(files['cif'], files['npz']),
+                    'description': base_name,
+                    'sequences': sequences,
+                    'metadata': {
+                        'source_dir': str(design_dir)
+                    }
+                }
+            else:
+                design = {
+                    'name': base_name,
+                    'sequences': sequences,
+                    'metadata': {
+                        'source_dir': str(design_dir)
+                    }
+                }
             designs.append(design)
             
         except Exception as e:
@@ -203,31 +233,51 @@ def process_design_files(design_dir: Path) -> List[Dict]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description='Generate YAML from design directory')
-    parser.add_argument('design_dir', type=str, help='Directory containing CIF and NPZ files')
+    parser.add_argument('design_dirs', type=str, nargs='+', help='One or more directories containing CIF and NPZ files')
     parser.add_argument('output_yaml', type=str, help='Output YAML file path')
+    parser.add_argument('--use-unique-ids', action='store_true', 
+                        help='Use SHA1-based unique IDs as design names (default: use base filename)')
     args = parser.parse_args()
     
-    design_dir = Path(args.design_dir)
+    design_dirs = [Path(d) for d in args.design_dirs]
     output_yaml = Path(args.output_yaml)
     
     # Create output directory if it doesn't exist
     output_yaml.parent.mkdir(parents=True, exist_ok=True)
     
-    # Process designs
-    designs = process_design_files(design_dir)
+    # Process designs from all directories
+    all_designs = []
+    total_designs_processed = 0
+    
+    for design_dir in design_dirs:
+        print(f"Processing directory: {design_dir}")
+        designs = process_design_files(design_dir, args.use_unique_ids)
+        all_designs.extend(designs)
+        total_designs_processed += len(designs)
+        print(f"  Found {len(designs)} designs")
+    
+    # Create experiment name from all directory names
+    if len(design_dirs) == 1:
+        experiment_name = design_dirs[0].name
+    else:
+        experiment_name = f"multi_dir_experiment_{len(design_dirs)}_dirs"
     
     # Create final YAML structure
     yaml_data = {
         'version': 1,
-        'experiment_name': design_dir.name,
-        'designs': designs
+        'experiment_name': experiment_name,
+        'designs': all_designs
     }
     
     # Write YAML file
     with open(output_yaml, 'w') as f:
         yaml.safe_dump(yaml_data, f, sort_keys=False)
     
-    print(f"Successfully processed {len(designs)} designs")
+    print(f"Successfully processed {total_designs_processed} designs from {len(design_dirs)} directories")
+    if args.use_unique_ids:
+        print("Used SHA1-based unique IDs for design names")
+    else:
+        print("Used base filenames for design names")
     print(f"YAML file written to: {output_yaml}")
 
 if __name__ == '__main__':

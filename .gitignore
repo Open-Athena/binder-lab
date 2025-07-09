@@ -5,6 +5,9 @@ resources/*/*.pkl
 resources/*/*.tar
 resources/boltz/mols
 
+.vscode
+.triton
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
