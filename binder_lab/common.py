@@ -5,19 +5,14 @@ from pathlib import Path
 from typing import Optional, Dict, Any, Union
 import warnings
 
-try:
-    import gemmi
-    GEMMI_AVAILABLE = True
-except ImportError:
-    GEMMI_AVAILABLE = False
-    warnings.warn("gemmi not available - structure parsing will be disabled")
+import gemmi
 
-
-def load_predictions_csv(csv_path: Union[str, Path], 
+def load_structure_predictions(csv_path: Union[str, Path], 
                         parse_structures: bool = True,
                         parse_confidence: bool = True, 
                         parse_npz: bool = True,
-                        base_dir: Optional[Union[str, Path]] = None) -> pd.DataFrame:
+                        base_dir: Optional[Union[str, Path]] = None,
+                        add_summaries: bool = True) -> pd.DataFrame:
     """
     Load predictions CSV file and parse all associated data files.
     
@@ -53,12 +48,9 @@ def load_predictions_csv(csv_path: Union[str, Path],
         return df
     
     # Parse structures
-    if parse_structures and GEMMI_AVAILABLE:
+    if parse_structures:
         print("Parsing CIF structures...")
         df['structure'] = df.apply(lambda row: _parse_cif_structure(base_dir / row['cif_path']), axis=1)
-    elif parse_structures and not GEMMI_AVAILABLE:
-        print("Warning: gemmi not available, skipping structure parsing")
-        df['structure'] = None
     
     # Parse confidence files
     if parse_confidence:
@@ -72,17 +64,17 @@ def load_predictions_csv(csv_path: Union[str, Path],
             col_name = f'{npz_type}_path'
             if col_name in df.columns:
                 print(f"  Parsing {npz_type} files...")
-                df[npz_type] = df.apply(lambda row: _parse_npz_file(base_dir / row[col_name]), axis=1)
+                df[npz_type] = df.apply(lambda row: _parse_npz_file(base_dir / row[col_name]) if not pd.isna(row[col_name]) else None, axis=1)
     
+    if add_summaries:
+        df = add_summary_columns(df)
+
     print(f"Parsing complete. DataFrame now has {len(df.columns)} columns")
     return df
 
 
 def _parse_cif_structure(cif_path: Path) -> Optional[gemmi.Structure]:
-    """Parse a CIF structure file using gemmi."""
-    if not GEMMI_AVAILABLE:
-        return None
-        
+    """Parse a CIF structure file using gemmi."""        
     try:
         if not cif_path.exists():
             print(f"Warning: CIF file not found: {cif_path}")
@@ -144,18 +136,12 @@ def get_structure_info(structure: gemmi.Structure) -> Dict[str, Any]:
     
     info = {
         'name': structure.name,
-        'spacegroup': str(structure.spacegroup_hm) if structure.spacegroup_hm else None,
         'num_models': len(structure),
         'num_chains': 0,
         'num_residues': 0,
         'num_atoms': 0,
         'chain_ids': [],
-        'resolution': None
     }
-    
-    # Get resolution from metadata if available
-    if hasattr(structure, 'resolution') and structure.resolution:
-        info['resolution'] = structure.resolution
     
     # Count chains, residues, atoms
     for model in structure:
@@ -284,32 +270,3 @@ def add_summary_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def load_and_analyze_predictions(csv_path: Union[str, Path], 
-                                add_summaries: bool = True,
-                                **kwargs) -> pd.DataFrame:
-    """
-    Convenience function to load predictions CSV and add all parsed data and summaries.
-    
-    Parameters:
-    -----------
-    csv_path : str or Path
-        Path to predictions CSV file
-    add_summaries : bool
-        Whether to add summary columns
-    **kwargs
-        Additional arguments passed to load_predictions_csv
-        
-    Returns:
-    --------
-    pd.DataFrame
-        Fully loaded and analyzed predictions DataFrame
-    """
-    # Load and parse all data
-    df = load_predictions_csv(csv_path, **kwargs)
-    
-    # Add summary columns
-    if add_summaries and len(df) > 0:
-        df = add_summary_columns(df)
-    
-    print(f"Final DataFrame: {len(df)} rows, {len(df.columns)} columns")
-    return df
