@@ -7,7 +7,6 @@ designs:
         id: A
         sequence: MALWMRLLPLLALLALWGPDPAAAMALWMRLLPLLALLALWGPDPAAA
         designed: DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-        msa: empty
       - ligand:
         id: B
         ccd: IAI
@@ -17,7 +16,6 @@ designs:
         id: A
         sequence: MALWMRLLPLLALLAGPDPAAAMALWMRLLPLLALLALWGPDPAAA
         designed: DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-        msa: empty
       - ligand:
         id: B
         ccd: IAI

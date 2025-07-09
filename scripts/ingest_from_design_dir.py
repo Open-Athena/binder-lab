@@ -74,8 +74,7 @@ def get_chain_info(structure: gemmi.Structure, chain_id: str, design_mask: Optio
             'protein': {
                 'id': chain_id,
                 'sequence': sequence,
-                'designed': designed,
-                'msa': 'empty'
+                'designed': designed
             }
         }
     
