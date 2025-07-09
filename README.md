@@ -3,6 +3,15 @@ Suite for evaluation of designed protein binders
 
 ## Setup
 
+### Prereqs
+You will need docker (to build the images) and apptainer (to run them via snakemake) installed.
+
+You can install aptainer on ubuntu with:
+
+```
+sudo apt install -y apptainer
+```
+
 ### Copy or link AF3 weights
 You will need to acquire AF3 weights from Google. Then:
 ```
@@ -46,7 +55,7 @@ cp examples/config1.yaml $OUT_DIR/config.yaml
 
 Now invoke snakemake:
 ```
-snakemake --cores all --container-backend docker --config workdir=$OUT_DIR
+snakemake --cores all --use-apptainer --config workdir=$OUT_DIR
 ```
 
 ## Run unit tests

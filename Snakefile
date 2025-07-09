@@ -55,27 +55,29 @@ rule prepare_boltz_inputs:
                 
                 # Process each sequence in the design
                 for seq in sequences:
-                    # Handle protein sequences - check if 'protein' key exists (even if None)
+                    # Handle protein sequences - check if 'protein' key exists 
                     if 'protein' in seq:
+                        protein_data = seq['protein']
                         protein_seq = {
                             'protein': {
-                                'id': seq['id'],
-                                'sequence': seq['sequence']
+                                'id': protein_data['id'],
+                                'sequence': protein_data['sequence']
                             }
                         }
                         
                         # If any residues are designed, use empty MSA
-                        if 'designed' in seq and 'D' in seq['designed']:
+                        if 'designed' in protein_data and 'D' in protein_data['designed']:
                             protein_seq['protein']['msa'] = 'empty'
                         
                         boltz_yaml['sequences'].append(protein_seq)
                     
-                    # Handle ligand sequences - check if 'ligand' key exists (even if None)
+                    # Handle ligand sequences - check if 'ligand' key exists
                     elif 'ligand' in seq:
+                        ligand_data = seq['ligand']
                         ligand_seq = {
                             'ligand': {
-                                'id': seq['id'],
-                                'ccd': seq['ccd']
+                                'id': ligand_data['id'],
+                                'ccd': ligand_data['ccd']
                             }
                         }
                         boltz_yaml['sequences'].append(ligand_seq)
@@ -87,6 +89,13 @@ rule prepare_boltz_inputs:
             
             print(f"Created {len(designs_data.get('designs', []))} YAML files in {output_dir} for {predictor['name']}")
 
+# Helper function to get predictor config
+def get_predictor_config(predictor_name):
+    for pred in config.get('structure_predictors', []):
+        if pred.get('name') == predictor_name and pred.get('tool') == 'boltz':
+            return pred
+    raise ValueError(f"Could not find boltz predictor config for {predictor_name}")
+
 # Rule to run boltz predict on the prepared YAML files
 rule boltz_predict:
     input:
@@ -94,33 +103,26 @@ rule boltz_predict:
     output:
         directory("{predictor}_predictions")
     container:
-        f"docker://{config.get('boltz_image', 'binder-lab-boltz:latest')}"
-    run:
-        import subprocess
+        f"{config.get('boltz_image', 'binder-lab-boltz.sif')}"
+    params:
+        version=lambda wildcards: get_predictor_config(wildcards.predictor).get('version', 2),
+        recycles=lambda wildcards: get_predictor_config(wildcards.predictor).get('recycles', 3)
+    shell:
+        """
+        # Remove snakemake timestamp file that interferes with boltz
+        rm -f {input.boltz_inputs}/.snakemake_timestamp
         
-        # Find the predictor config
-        predictor_name = wildcards.predictor
-        predictor_config = None
-        for pred in config.get('structure_predictors', []):
-            if pred.get('name') == predictor_name and pred.get('tool') == 'boltz':
-                predictor_config = pred
-                break
-        
-        if not predictor_config:
-            raise ValueError(f"Could not find boltz predictor config for {predictor_name}")
-        
-        # Build boltz command based on predictor config
-        cmd = ["boltz", "predict", str(input.boltz_inputs), "--out_dir", str(output), "--use_msa_server"]
+        # Build base command
+        CMD="boltz predict {input.boltz_inputs} --out_dir {output} --use_msa_server"
         
         # Add version-specific flags
-        version = predictor_config.get('version', 2)
-        if version == 1:
-            cmd.extend(["--model", "boltz1"])
+        if [ "{params.version}" = "1" ]; then
+            CMD="$CMD --model boltz1"
+        fi
         
-        # Add recycling steps if specified
-        if 'recycles' in predictor_config:
-            cmd.extend(["--recycling_steps", str(predictor_config['recycles'])])
+        # Add recycling steps
+        CMD="$CMD --recycling_steps {params.recycles}"
         
-        # Run the command
-        print(f"Running: {' '.join(cmd)}")
-        subprocess.check_call(cmd)
+        echo "Running: $CMD"
+        $CMD
+        """
