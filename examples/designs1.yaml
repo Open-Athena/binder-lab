@@ -6,7 +6,7 @@ designs:
       - protein:
         id: A
         sequence: MALWMRLLPLLALLALWGPDPAAAMALWMRLLPLLALLALWGPDPAAA
-        designed: 111111111111111111111111111111111111111111111111
+        designed: DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
         msa: empty
       - ligand:
         id: B
@@ -16,7 +16,7 @@ designs:
       - protein:
         id: A
         sequence: MALWMRLLPLLALLAGPDPAAAMALWMRLLPLLALLALWGPDPAAA
-        designed: 1111111111111111111111111111111111111111111111
+        designed: DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
         msa: empty
       - ligand:
         id: B

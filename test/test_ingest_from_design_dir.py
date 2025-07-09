@@ -86,13 +86,13 @@ class TestIngestFromDesignDir:
         assert "protein" in info
         assert info["protein"]["id"] == "A"
         assert len(info["protein"]["sequence"]) == 100
-        assert info["protein"]["designed"] == "0" * 100  # Default all zeros
+        assert info["protein"]["designed"] == "." * 100  # Default all dots
         assert info["protein"]["msa"] == "empty"
         
         # Test with design mask
         design_mask = [True] * 50 + [False] * 50  # First 50 designed
         info = get_chain_info(structure, "A", design_mask)
-        assert info["protein"]["designed"] == "1" * 50 + "0" * 50
+        assert info["protein"]["designed"] == "D" * 50 + "." * 50
     
     def test_get_chain_info_ligand(self, test_data_dir):
         """Test getting chain info for ligand chains"""

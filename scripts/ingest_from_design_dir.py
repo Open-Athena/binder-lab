@@ -67,9 +67,9 @@ def get_chain_info(structure: gemmi.Structure, chain_id: str, design_mask: Optio
     # If we got a protein sequence, return protein info
     if sequence:
         if design_mask is not None:
-            designed = ''.join('1' if x else '0' for x in design_mask)
+            designed = ''.join('D' if x else '.' for x in design_mask)
         else:
-            designed = '0' * len(sequence)
+            designed = '.' * len(sequence)
         return {
             'protein': {
                 'id': chain_id,
