@@ -1,0 +1,1 @@
+Copy your AF3 model weights to this directory.

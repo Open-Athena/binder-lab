@@ -1,4 +1,9 @@
 results/
+resources/*/*.sif
+resources/*/*.ckpt
+resources/*/*.pkl
+resources/*/*.tar
+resources/boltz/mols
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -44,18 +44,5 @@ RUN git clone --branch main https://github.com/timodonnell/boltz.git /home/user/
     && git remote add upstream https://github.com/jwohlwend/boltz.git \
     && pip install -e /home/user/boltz
 
-# Test boltz (GPU unavailable error is expected but okay).
-# We do this so it is forced to download the model weights.
-RUN mkdir /tmp/test-data \
-    && echo ">A|protein|empty" >> /tmp/test-data/protein.fasta \
-    && echo "IVMTQSPATLSLSPGERATLSCRASQSAGFYLAWYQQKPGQAPRLLIYDTSNRATGIPARFSGRGSGTDFT" >> /tmp/test-data/protein.fasta \
-    && boltz predict /tmp/test-data/protein.fasta --model boltz2 ; ls -l /tmp/test-data
-
-# Download boltz1 weights as well
-RUN mkdir /tmp/test-data \
-    && echo ">A|protein|empty" >> /tmp/test-data/protein.fasta \
-    && echo "IVMTQSPATLSLSPGERATLSCRASQSAGFYLAWYQQKPGQAPRLLIYDTSNRATGIPARFSGRGSGTDFT" >> /tmp/test-data/protein.fasta \
-    && boltz predict /tmp/test-data/protein.fasta --model boltz1 ; ls -l /tmp/test-data
-
 RUN mkdir /home/user/analysis
 WORKDIR /home/user/analysis

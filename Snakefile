@@ -1,5 +1,9 @@
 import yaml
 from pathlib import Path
+import os
+
+# Save original cwd
+original_cwd = os.getcwd()
 
 # Configuration
 configfile: f"{config.get('workdir', '.')}/config.yaml"
@@ -18,7 +22,7 @@ def get_boltz_predictors():
 # Main workflow entry point
 rule all:
     input:
-        [f"{predictor['name']}_predictions" for predictor in get_boltz_predictors()]
+        [f"{predictor['name']}_predictions.done" for predictor in get_boltz_predictors()]
 
 # Rule to prepare individual YAML files for each boltz predictor
 rule prepare_boltz_inputs:
@@ -96,33 +100,57 @@ def get_predictor_config(predictor_name):
             return pred
     raise ValueError(f"Could not find boltz predictor config for {predictor_name}")
 
+
+
 # Rule to run boltz predict on the prepared YAML files
 rule boltz_predict:
     input:
         boltz_inputs="{predictor}_inputs"
     output:
-        directory("{predictor}_predictions")
+        directory("{predictor}_predictions"),
+        touch("{predictor}_predictions.done")
     container:
-        f"{config.get('boltz_image', 'binder-lab-boltz.sif')}"
+        f"{config.get('boltz_image', os.path.join(original_cwd, 'resources', 'boltz', 'boltz.sif'))}"
+    resources:
+        gpu=1
     params:
         version=lambda wildcards: get_predictor_config(wildcards.predictor).get('version', 2),
-        recycles=lambda wildcards: get_predictor_config(wildcards.predictor).get('recycles', 3)
+        recycles=lambda wildcards: get_predictor_config(wildcards.predictor).get('recycles', 3),
+        diffusion_samples=lambda wildcards: get_predictor_config(wildcards.predictor).get('models', 5),
+        resources_dir="/resources/boltz",
     shell:
         """
         # Remove snakemake timestamp file that interferes with boltz
         rm -f {input.boltz_inputs}/.snakemake_timestamp
         
         # Build base command
-        CMD="boltz predict {input.boltz_inputs} --out_dir {output} --use_msa_server"
+        CMD="boltz predict {input.boltz_inputs} --out_dir {output[0]} --use_msa_server"
         
         # Add version-specific flags
         if [ "{params.version}" = "1" ]; then
             CMD="$CMD --model boltz1"
         fi
         
-        # Add recycling steps
-        CMD="$CMD --recycling_steps {params.recycles}"
-        
+        # Add recycling steps and number of models
+        CMD="$CMD --recycling_steps {params.recycles} --diffusion_samples {params.diffusion_samples}"
+
+        # Check that cache directory exists
+        if [ ! -d "{params.resources_dir}" ]; then
+            echo "Error: Cache directory {params.resources_dir} does not exist!"
+            exit 1
+        fi
+
+        # Set up links for cache directory (model weights etc)
+        # We can't pass the cache directory to boltz because it wants to write to it.
+        #mkdir -p ~/.boltz
+        #for i in $(ls {params.resources_dir}); do
+        #    ln -s {params.resources_dir}/$i ~/.boltz/$i
+        #done
+        CMD="$CMD --cache {params.resources_dir}"
+
+        # Set up devices
+        CMD="$CMD --devices {resources.gpu}"
+
         echo "Running: $CMD"
         $CMD
         """
