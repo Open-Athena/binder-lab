@@ -18,6 +18,7 @@ classifiers = [
 ]
 dependencies = [
     "gemmi",
+    "snakemake",
 ]
 
 [project.urls]

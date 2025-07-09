@@ -37,12 +37,6 @@ mkdir -p $OUT_DIR
 python scripts/ingest_from_design_dir.py $DESIGN_DIR $OUT_DIR/designs.yaml
 ```
 
-```
-OUT_DIR=results/$(basename $DESIGN_DIR)
-mkdir -p $OUT_DIR
-python scripts/ingest_from_design_dir.py $DESIGN_DIR $OUT_DIR/designs.yaml
-```
-
 Take a look at $OUT_DIR/designs.yaml and make sure everything looks right. Then copy a config
 file that indicates what predictors to run and what metrics to calculate.
 

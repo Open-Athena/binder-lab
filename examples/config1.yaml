@@ -1,5 +1,8 @@
 version: 1
 
+# Docker images (optional overrides)
+# boltz_image: binder-lab-boltz:latest  # Uncomment to override default
+
 structure_predictors:
   - name: alphafold3
     tool: alphafold3
@@ -8,4 +11,8 @@ structure_predictors:
     tool: boltz
     version: 2
     recycles: 3
+  - name: boltz1  
+    tool: boltz
+    version: 1
+    recycles: 0
 
