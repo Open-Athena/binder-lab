@@ -1,0 +1,44 @@
+---
+description: Prevent modifications to sys.path to maintain clean and portable Python code
+globs: ["**/*.py"]
+alwaysApply: false
+---
+
+# No sys.path Modifications
+
+## Rule
+
+You shall not modify `sys.path` in any way. This includes:
+
+- `sys.path.append()`
+- `sys.path.insert()` 
+- `sys.path.extend()`
+- `sys.path += [...]`
+- `sys.path[index] = value`
+- Direct assignment to `sys.path`
+
+## Why This Rule Exists
+
+Modifying `sys.path` at runtime:
+- Makes code less portable
+- Creates hard-to-debug import issues
+- Can cause import conflicts
+- Is considered an anti-pattern in modern Python
+
+## Alternatives
+
+Instead of modifying `sys.path`:
+- Use proper package installation with `pip install` or `pip install -e .`
+- Set `PYTHONPATH` environment variable before running scripts
+- Use virtual environments properly
+- Configure your IDE's Python path settings
+- Use relative imports within your package structure
+- Use `importlib` for dynamic imports when absolutely necessary
+
+## Emergency Cases
+
+If you absolutely must modify the Python path:
+- Set `PYTHONPATH` before running your script
+- Use `pip install -e .` for development installations
+- Document why the modification is necessary
+- Consider if the code architecture can be improved instead

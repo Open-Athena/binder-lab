@@ -16,6 +16,11 @@ docker build -t binder-lab-boltz:latest docker/boltz
 docker build -t binder-lab-metrics:latest docker/metrics
 ```
 
+### Install the package
+```
+pip install -e .
+```
+
 ## Running
 First you need to make a yaml file with your designs.
 
